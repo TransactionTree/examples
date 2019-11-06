@@ -1,20 +1,15 @@
-using System.Collections.Generic;
 using System.IO;
 using Helpers;
-using BandwidthSdk.Standard.BandwidthVoice;
-using BandwidthSdk.Standard.BandwidthVoice.Controllers;
-using BandwidthSdk.Standard.BandwidthVoice.Exceptions;
-using BandwidthSdk.Standard.BandwidthVoice.Models;
-using BandwidthSdk.Standard.Utilities;
-using BandwidthSdk.Standard;
-
-using BandwidthBXML;
+using Bandwidth.Standard.Voice.Controllers;
+using Bandwidth.Standard.Voice.Models;
+using Bandwidth.Standard.Voice.Bxml;
+using Bandwidth.Standard.Utilities;
+using Bandwidth.Standard;
 
 using static Eagle.Server;
 
 using static System.Console;
-
-using static Enviroment.Properties;
+using System;
 
 namespace Controllers {
 
@@ -26,18 +21,18 @@ namespace Controllers {
 		private static readonly Configuration voiceConfig2 = null;
 
 		private static readonly Configuration voiceConfig = new Configuration.Builder()
-			.WithBandwidthVoiceBasicAuthPassword( getProperty("voice.password"))
-			.WithBandwidthVoiceBasicAuthUserName( getProperty("voice.username"))
-			.WithEnvironment(Configuration.Environments.PRODUCTION)
+            .WithVoiceBasicAuthPassword(Environment.GetEnvironmentVariable("VOICE_API_SECRET"))
+            .WithVoiceBasicAuthUserName(Environment.GetEnvironmentVariable("VOICE_API_USER"))
+            .WithEnvironment(Configuration.Environments.PRODUCTION)
 			.Build();
 
-    private static readonly string applicationId =  getProperty("voice.application.id");
+    private static readonly string applicationId =  "";
 
-    private static readonly string accountId =  getProperty("voice.account.id");
+    private static readonly string accountId = "";
 
-    private static readonly APIController voiceClient = new BandwidthVoiceClient(voiceConfig).Client;
+    private static readonly APIController voiceClient = new BandwidthClient(voiceConfig).Voice.Client;
 
-	private static readonly string host = getProperty("host");
+	private static readonly string host ="";
 
 	/**
      * Reply to an incoming call with a sentence and a gather
@@ -91,7 +86,7 @@ namespace Controllers {
                 bxmlResponse.Add(playAudio);
             }
 
-            return bxmlResponse.ToXml();
+            return bxmlResponse.ToBXML();
 
         });
     }
@@ -139,7 +134,7 @@ namespace Controllers {
             Response res =  new Response();
 			res.Add(gather);
 
-			return res.ToXml();
+			return res.ToBXML();
 
         }));
 
@@ -173,7 +168,7 @@ namespace Controllers {
 
                 res.Add(transfer);
             }
-            return res.ToXml();
+            return res.ToBXML();
         }));
 
     }

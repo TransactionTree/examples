@@ -1,18 +1,16 @@
 using System.Collections.Generic;
+using System;
 using System.IO;
 using Helpers;
-using BandwidthSdk.Standard.BandwidthMessaging;
-using BandwidthSdk.Standard.BandwidthMessaging.Controllers;
-using BandwidthSdk.Standard.BandwidthMessaging.Exceptions;
-using BandwidthSdk.Standard.BandwidthMessaging.Models;
-using BandwidthSdk.Standard.Utilities;
-using BandwidthSdk.Standard;
+using Bandwidth.Standard.Messaging.Controllers;
+using Bandwidth.Standard.Messaging.Models;
+using Bandwidth.Standard.Utilities;
+using Bandwidth.Standard;
 
 using static Eagle.Server;
 
 using static System.Console;
-
-using static Enviroment.Properties;
+using System.Text;
 
 namespace Controllers {
 	/**
@@ -20,16 +18,16 @@ namespace Controllers {
 	  */
 	public class MessageController {
 
-		static readonly Configuration msgConfig = new Configuration.Builder()
-			.WithBandwidthMessagingBasicAuthPassword( getProperty("message.api.secret") )
-            .WithBandwidthMessagingBasicAuthUserName( getProperty("message.api.token") )
+		static readonly Configuration config = new Configuration.Builder()
+			.WithMessagingBasicAuthPassword( Environment.GetEnvironmentVariable("MSG_API_SECRET") )
+            .WithMessagingBasicAuthUserName (Environment.GetEnvironmentVariable("MSG_API_USER"))
             .WithEnvironment(Configuration.Environments.PRODUCTION)
             .Build();
 
-		private static APIController msgClient =  new BandwidthMessagingClient(msgConfig).Client;
+        private static APIController msgClient = new BandwidthClient(config).Messaging.Client;
 
-    	private  static string msgUserId = getProperty("message.account.id");
-		private static readonly string applicationId =  getProperty("message.application.id");
+    	private  static string msgUserId ="";
+		private static readonly string applicationId =  "";
 
 		/**
 		* Uploads a media file from the disk to the Bandwidth network
@@ -42,9 +40,10 @@ namespace Controllers {
        		if(!File.Exists(fileURL)) return;
 
 			FileInfo fileInfo = new FileInfo(fileURL);
+            var buffer = File.ReadAllBytes(fileURL);
 
-        	try {
-            	msgClient.UploadMedia(msgUserId, mediaId, fileInfo.Length, File.ReadAllBytes(fileURL) ,contentType, "no-cache" );
+            try {
+            	msgClient.UploadMedia(msgUserId, mediaId, fileInfo.Length, Encoding.UTF8.GetString(buffer, 0, buffer.Length) ,contentType, "no-cache" );
         	} catch (APIException e) {
             	WriteLine(e.Message);
         	} catch (IOException e) {

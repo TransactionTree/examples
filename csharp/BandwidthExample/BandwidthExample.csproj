@@ -6,13 +6,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="BandwidthSdk.Standard" >
-      <HintPath>.\libs\BandwidthSdk.Standard.dll</HintPath>
-	</Reference>
-	<Reference Include="BandwidthBXML" >
-		<HintPath>.\libs\BandwidthBXML</HintPath>
-	  </Reference>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.1"/>
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3"/>
+    <PackageReference Include="Bandwidth.Sdk" Version="1.0.0"/>
   </ItemGroup>
 
 </Project>
