@@ -14,6 +14,10 @@ using System;
 using static Eagle.Server;
 using System.Collections.Generic;
 using System.Threading;
+using System.Net;
+using System.Text;
+using System.IO;
+using Bandwidth.Standard.Http.Client;
 
 namespace RecordingExample
 {
@@ -52,6 +56,7 @@ namespace RecordingExample
 
 
             //Starting the Eagle Server 
+            useHttp(true);
             port("8080");
             startServerInstance();
 
@@ -152,12 +157,12 @@ namespace RecordingExample
                                 else
                                 {
                                     var speakSentence = new SpeakSentence();
-                                    speakSentence.Sentence = "Thank you, a text message of the recording has been sent " + (string)callback.from;
+                                    speakSentence.Sentence = "Thank you, a text message of the recording has been sent ";
                                     speakSentence.Voice = "julie";
 
                                     bxmlResponse.Add(speakSentence);
 
-                                    sendMMSMessage(recordingUrl, "+19192347322", (string)callback.from);
+                                    sendRecordingAsMMSMessage(recordingUrl, "+19192347322", (string)callback.from);
 
                                     Console.WriteLine("Call Finished");
 
@@ -222,7 +227,7 @@ namespace RecordingExample
 
                                     bxmlResponse.Add(speakSentence);
 
-                                    sendMMSMessage((string)callback.tag, "+19192347322", (string)callback.from);
+                                    sendRecordingAsMMSMessage((string)callback.tag, "+19192347322", (string)callback.from);
 
                                     //TODO send MMS Msg
                                     Console.WriteLine("Call Finished");
@@ -287,7 +292,6 @@ namespace RecordingExample
                 return bxmlResponse.ToBXML();
             });
 
-
             post("/call/status", (request, response) =>
             {
                 string json = ControllerHelpers.getBody(request);
@@ -305,6 +309,7 @@ namespace RecordingExample
                 if("message-failed".Equals( (string)callback[0].type) ) {
                     Console.WriteLine("errorCode: " + (string)callback[0].errorCode);
                     Console.WriteLine("errorCode: " + (string)callback[0].description);
+                    Console.WriteLine("message ID: " + (string)callback[0].message.id);
                 }
 
                 return "";
@@ -317,14 +322,15 @@ namespace RecordingExample
 
         }
 
-        static void sendMMSMessage(string mediaUrl, string from, string to)
+        static void sendRecordingAsMMSMessage(string mediaUrl, string from, string to)
         {
 
-            mediaUrl = "https://" + voiceUsername + ":" + voicePassword + "@" + mediaUrl.Replace("https://", "");
-            Console.WriteLine(mediaUrl);
+            string newMediaUrl = uploadMediaToMessage(mediaUrl);
+
+            Console.WriteLine(newMediaUrl);
 
             MessageRequest messageRequest = new MessageRequest();
-            messageRequest.Media = new List<string>() { mediaUrl };
+            messageRequest.Media = new List<string>() { newMediaUrl };
             messageRequest.Text = "This is your recording";
             messageRequest.To = new List<string>() { to };
             messageRequest.From = from;
@@ -334,6 +340,39 @@ namespace RecordingExample
             Console.WriteLine("From:  " + messageRequest.From);
 
             msgController.CreateMessage(msgAccountId, messageRequest);
+        }
+
+        static string uploadMediaToMessage(string source)
+        {
+
+            Uri uri = new Uri(source);
+
+            string recordingId = uri.Segments[uri.Segments.Length - 2].Replace("/","");
+            string callId = uri.Segments[uri.Segments.Length - 4].Replace("/", "");
+
+            var mediaReply = voiceController.GetStreamRecordingMedia(voiceAccountId, callId, recordingId);
+
+            //FileStreamInfo fsi = new FileStreamInfo( mediaReply.Data, recordingId + ".wav", "audio/wav");
+
+            /**
+            string test = null;
+            using( StreamReader sr = new StreamReader(mediaReply.Data))
+            {
+                test = sr.ReadToEnd();
+            }
+
+            */
+
+            msgController.UploadMedia(msgAccountId, recordingId , mediaReply.Data.Length, mediaReply.Data, "application/octet-stream", "no-cache");
+      
+            return "https://messaging.bandwidth.com/api/v2/users/"+ msgAccountId +"/media/" + recordingId;
+            
+        }
+
+        private static string Base64Encode(string plainText)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+            return System.Convert.ToBase64String(plainTextBytes);
         }
     }
 }
