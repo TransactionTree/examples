@@ -3,4 +3,4 @@
 *.class
 
 .vs/
-csharp/BandwidthExample/obj/
+csharp/**/obj/
