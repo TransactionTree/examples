@@ -45,8 +45,8 @@ namespace RecordingExample
 
         private static BandwidthClient clientInit = new BandwidthClient(config);
 
-        private static VoiceController voiceController = clientInit.Voice.Client;
-        private static MessagingController msgController = clientInit.Messaging.Client;
+        private static VoiceController voiceController = clientInit.Voice.APIController;
+        private static MessagingController msgController = clientInit.Messaging.APIController;
 
         static void Main(string[] args)
         {
@@ -352,7 +352,7 @@ namespace RecordingExample
 
             var mediaReply = voiceController.GetStreamRecordingMedia(voiceAccountId, callId, recordingId);
 
-            //FileStreamInfo fsi = new FileStreamInfo( mediaReply.Data, recordingId + ".wav", "audio/wav");
+            FileStreamInfo fsi = new FileStreamInfo( mediaReply.Data, recordingId + ".wav", "audio/wav");
 
             /**
             string test = null;
@@ -363,7 +363,7 @@ namespace RecordingExample
 
             */
 
-            msgController.UploadMedia(msgAccountId, recordingId , mediaReply.Data.Length, mediaReply.Data, "application/octet-stream", "no-cache");
+            msgController.UploadMedia(msgAccountId, recordingId , mediaReply.Data.Length, fsi, "application/octet-stream", "no-cache");
       
             return "https://messaging.bandwidth.com/api/v2/users/"+ msgAccountId +"/media/" + recordingId;
             
