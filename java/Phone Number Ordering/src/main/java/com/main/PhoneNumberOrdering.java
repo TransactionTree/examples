@@ -75,8 +75,12 @@ public class PhoneNumberOrdering {
 
 
             try {
-                List numbers = AvailableNumbers.search(client, query);
+                List<?> numbers = AvailableNumbers.search(client, query);
                 String retStr = "[\n";
+
+                if(numbers.size() > 10){
+                    numbers = numbers.subList(0, 9);
+                }
 
                 for(Object str : numbers) {
                     retStr = retStr.concat(str.toString() +",\n");
